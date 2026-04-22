@@ -1,0 +1,28 @@
+name: Compilar Dylib iOS
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Configurar Theos (Opcional se usar CydiaSubstrate)
+        run: |
+          export THEOS=~/theos
+          git clone --recursive https://github.com/theos/theos.git $THEOS
+          
+      - name: Compilar Dylib
+        run: |
+          # Comando de compilação usando o clang do macOS
+          xcrun --sdk iphoneos clang -shared -arch arm64 \
+          -mios-version-min=12.0 -fobjc-arc \
+          -framework Foundation -lsubstrate \
+          FileRedirectionDylib.mm -o FileRedirection.dylib
+          
+      - name: Upload do Binário
+        uses: actions/upload-artifact@v3
+        with:
+          name: FileRedirection-Dylib
+          path: FileRedirection.dylib
