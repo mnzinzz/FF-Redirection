@@ -8,17 +8,22 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v3
 
-      - name: Configurar Theos (Opcional se usar CydiaSubstrate)
+      - name: Configurar Theos e SDKs
         run: |
           export THEOS=~/theos
           git clone --recursive https://github.com/theos/theos.git $THEOS
+          # Baixar headers do Substrate necessários para o hooking
+          mkdir -p $THEOS/include
+          curl -L https://raw.githubusercontent.com/theos/headers/master/substrate.h -o $THEOS/include/substrate.h
           
       - name: Compilar Dylib
         run: |
-          # Comando de compilação usando o clang do macOS
+          export THEOS=~/theos
+          # Comando de compilação corrigido com caminhos para os headers do Theos
           xcrun --sdk iphoneos clang -shared -arch arm64 \
           -mios-version-min=12.0 -fobjc-arc \
-          -framework Foundation -lsubstrate \
+          -I$THEOS/include \
+          -framework Foundation \
           FileRedirectionDylib.mm -o FileRedirection.dylib
           
       - name: Upload do Binário
